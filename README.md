@@ -9,7 +9,6 @@
 - `RPP_FL_V7_ALIGNED_COUPLING_Colab.ipynb` — code-only, self-contained Colab notebook embedding the required source code. No saved cell outputs or attachments.
 - `requirements.txt` — import dependencies (not an exact historical environment lockfile).
 - `.gitignore` — excludes common datasets, generated outputs, and local secrets.
-- `SOURCE_CODE_SHA256.txt` — checksums for the three source artifacts.
 
 ## How to use
 
@@ -31,6 +30,10 @@ Outputs are saved only to `MyDrive/RPP_FL_RESULTS_V7_ALIGNED_COUPLING` (and prep
 - The source's federated training simulator does not implement a cryptographic secure-aggregation backend. The differential-privacy branch is separate from individual-update robust screening.
 - No prepared arrays, raw files, split indices, predictions, result summaries or data-specific metadata are hosted here at the user's request. **Code-only release does not by itself fully satisfy a reviewer request for independently auditable numerical records.**
 - Exact raw-data snapshot identities and historic runtime versions remain to be confirmed. Please do not describe this code-only repository as a complete results reproducibility archive.
+
+## Repository scope and audit caution
+
+Only six code/documentation files are published in this repository. No evaluation data, split files, metrics, cached prepared arrays or saved predictions are published. The reviewer request for an independent numerical audit is **not fully satisfied by source code alone**. Original experiment source identity was not recorded in a historical execution-level hash and has not been cryptographically verified.
 
 ## Citation / manuscript use
 
