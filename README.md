@@ -1,153 +1,214 @@
-# RPP-FL: Robust and Privacy-Aware Federated Learning for IIoT Anomaly Detection
+# RPP-FL — Robust and Privacy-Aware Federated Learning for IIoT Anomaly Detection
 
-**Research code, historical experiment provenance, and reproducibility notes**
+**Research implementation · Federated intrusion detection · Non-IID evaluation · Poisoning robustness · Explainable aggregation diagnostics**
 
-> **Documentation clarification (19 October 2026).** An earlier version of this README was insufficiently clear about the difference between an **already completed V6 Reviewer-3 mechanism study** and a **later V7 source-aligned runner**. The historical study was executed and produced the three-seed results reported in Section 5.6.1 and Table 8 of the manuscript. The separate V7 runner was subsequently published as code; its execution should not be inferred from those historical results. This correction concerns documentation and attribution, not a claim that the V7 runner itself generated Table 8.
+RPP-FL is an experimental federated learning framework for binary anomaly and intrusion detection in the Industrial Internet of Things (IIoT). It combines a hybrid Transformer–MLP detector with client-update trust assessment, persistent reputation, collusion-aware safeguards, and robust server aggregation. A separate experimental mode studies the privacy–utility trade-off of client-level Gaussian differential privacy.
 
-## 1. Project overview
+This repository presents the **RPP-FL research project as one framework**, together with its evaluation code, reproducibility instructions, and documented experimental evidence.
 
-RPP-FL studies federated anomaly detection for Industrial Internet of Things (IIoT) traffic under heterogeneous (non-IID) data and poisoning attacks. The research explores geometric update trust, temporal reputation, collusion-related signals, robust aggregation, and an operationally separate differential-privacy aggregate-release experiment.
+> **Documentation correction — 19 October 2026:** Earlier README wording was ambiguous and could be read as suggesting that the mechanism-level experiments supporting the manuscript had not been executed. **They were executed.** The archived study contains **90 completed scenarios**, individual run results, training histories, checkpoints, and an execution-state record. The three-seed means reported in **Section 5.6.1 and Table 8** were checked against these saved results. The earlier statement about a code-only experimental runner should not have been interpreted as denying the completed underlying study.
 
-The manuscript includes evaluations on CICIoT2023, EdgeIIoTset, TON_IoT, and WUSTL-IIoT. The additional **mechanism-level study documented below is limited to CICIoT2023 and TON_IoT**; it should not be read as a cross-dataset-transfer experiment.
+## 1. Research objectives
 
-**Repository scope:** GitHub contains source code and execution instructions. The retained historical experiment results are stored **externally in Google Drive**, not checked into this repository. Source availability and numerical auditability are distinct matters.
+RPP-FL is designed to investigate three related questions:
 
-## 2. Historical mechanism-level experiment: verified provenance
+1. Can a federated hybrid neural detector maintain strong intrusion-detection utility across heterogeneous IIoT traffic data?
+2. How do geometric trust, event-triggered evidence, persistent reputation, and robust aggregation affect an attacker's influence when some participating clients are malicious?
+3. What privacy–utility trade-offs arise when a separate client-level differentially private aggregate-release mechanism is applied?
 
-The mechanism-level figures in **Section 5.6.1 / Table 8** came from the **V6 Reviewer-3 event-coupling experiment**. A review of the retained Google Colab notebook and Google Drive artifacts established the following:
+The work considers non-IID client partitions, ALIE-style poisoning, robustness stress tests, ablations, matched baselines, and protocol-specific diagnostic metrics. It does **not** claim universal attack identification or cross-dataset zero-shot transfer.
 
-| Provenance item | Evidence from the retained records |
+## 2. Framework architecture
+
+### 2.1 Local anomaly detector
+
+The local model combines learned feature-token representations, Transformer-based interactions, and a compact MLP prediction head. Local clients optimize the detector using their own partitioned records without sharing those raw training records as part of standard federated updates.
+
+### 2.2 Federated orchestration
+
+The experimental framework supports configurable client participation, locally trained updates, checkpointing, validation-driven selection, and aggregation across communication rounds. Client partitioning can be configured to assess heterogeneous label distributions.
+
+### 2.3 Trust- and reputation-aware robust aggregation
+
+The proposed RPP aggregation family evaluates client model updates using:
+
+- Robust geometric deviation from a client-update center.
+- Consistency with the current center and historical update direction.
+- Peer-agreement and compact-minority/collusion-related evidence.
+- Persistent client reputation with asymmetric adjustment.
+- Reputation- and trust-aware aggregation weights.
+- Coordinate-wise winsorization and a median-based aggregation fallback.
+
+The mechanism evaluation separately reports **predictive performance**, **malicious aggregation-weight share**, and **client attack-detection AUC**. These measures answer different questions and should not be treated as interchangeable.
+
+### 2.4 Separate differential-privacy evaluation
+
+The privacy experiments use clipped client updates, uniform aggregation, Gaussian noise, and Rényi differential privacy accounting in a **separate aggregate-release mode**. They do not demonstrate simultaneous cryptographic secure aggregation and individual-client Byzantine screening.
+
+## 3. Datasets and evaluation scope
+
+The code supports the project's dataset-processing and experiment workflows for several public IIoT/IoT intrusion-detection datasets.
+
+| Dataset | Research role |
 |---|---|
-| Execution status | `_STATE/execution_state.json` reports `COMPLETED`. |
-| Recorded start/resumption | `2026-10-16 07:12:15` (recorded without an explicit time-zone offset). |
-| Recorded completion | `2026-10-16 14:37:53` (recorded without an explicit time-zone offset). |
-| Independent file metadata | Google Drive metadata places the result files' creation/modification on **16 October 2026**; the final consolidated CSV was created at approximately **14:37:52 UTC**. |
-| Number of completed scenarios | **90 of 90**, with 90 unique dataset/scenario keys in the per-seed results. |
-| Experimental design | **2 datasets × 5 aggregation configurations × 3 protocol seeds × 3 conditions**. |
-| Datasets | `CICIoT2023`, `TON_IoT`. |
-| Variants | `simple_temporal`, `uncoupled`, `partial`, `full`, `p4p`. |
-| Protocol seeds | `42`, `2026`, `31415`. |
-| Conditions | Clean at Dirichlet alpha = 0.5; ALIE poisoning with 20% malicious clients at alpha = 0.5; and ALIE-20% at alpha = 0.1. |
-| Training budget | **25 communication rounds** per recorded scenario. |
-| Executed aggregation label | `rpp_event` for the event-coupling variants; the independently reimplemented P4P comparator is labeled `p4p`. |
+| CICIoT2023 | Federated detection, matched comparisons, and mechanism evaluation |
+| TON_IoT | Federated detection, poisoning robustness, privacy experiments, and mechanism evaluation |
+| EdgeIIoTset | Included in the retained comprehensive revision-suite evaluations |
+| WUSTL-IIoT | Included in the broader manuscript/dataset-processing workflow; its evaluation results are **not** part of the 185-run archive described below |
+| X-IIoTID | Dataset configuration support; no evaluation result is asserted from the cited archives |
 
-**Archived results folder:** [RPP_FL_RESULTS_V6_REVIEWER3 on Google Drive](https://drive.google.com/drive/folders/1nzivI5IvjbgUTf5LhzTJgNxFkvj7XYur). Access to the linked folder and individual files is subject to Google Drive sharing permissions.
+**Scope clarification:** The retained **185-run comprehensive revision archive** covers CICIoT2023, TON_IoT, and EdgeIIoTset. Its presence does not independently verify every dataset-wide claim in the manuscript. The separate mechanism-level results cover **CICIoT2023 and TON_IoT**.
 
-### 2.1 Files supporting the audit
+Datasets may be accessed through third-party sources according to the execution configuration. Dataset licenses, release identities, and raw-data snapshots should be independently checked before reusing or distributing data.
 
-The linked archive includes:
+## 4. Experimental program and evidence
 
-```text
-RPP_FL_RESULTS_V6_REVIEWER3/
-├── run_config.json
-├── all_results_partial.csv
-├── ALL_DATASETS_FINAL_RESULTS.csv
-├── _STATE/
-│   └── execution_state.json
-├── R3_TABLES/
-│   ├── MECHANISM_PER_SEED.csv
-│   ├── MECHANISM_MEAN_SD_CI95.csv
-│   ├── FULL_VS_ALTERNATIVES_PAIRED.csv
-│   ├── PAIRED_DIFFERENCE_SUMMARY.csv
-│   └── ROUND_LEVEL_SECURITY.csv
-├── CICIoT2023/
-│   └── r3_<variant>_<condition>_seed<seed>/
-└── TON_IoT/
-    └── r3_<variant>_<condition>_seed<seed>/
-```
+The research contains a comprehensive evaluation program and a focused mechanism-level study. They are related parts of the same RPP-FL investigation, with **separately preserved experiment records**.
 
-Individual scenario directories contain `final_result.json`, `COMPLETED.json`, `round_history.csv`, and `best_checkpoint.pt` / `last_checkpoint.pt`. These provide scenario-level results, completion markers, round-wise diagnostics, and model states.
+| Study component | Recorded scope | Evidence |
+|---|---|---|
+| Comprehensive reviewer-revision suite | **185 recorded scenarios** | Archived master result rows, scenario manifests, results, and prediction files were checked for internal consistency |
+| Mechanism-level aggregation study | **90/90 completed scenarios** | Linked Google Drive archive, per-seed outputs, execution state, training histories, and checkpoints |
 
-**Interpretation of the records:** `execution_state.json` and Google Drive timestamps support the documented execution history. The `RunFingerprint` fields identify saved experiment configurations but are **not cryptographic hashes of the executed source code**.
+### 4.1 Comprehensive evaluation: 185 scenarios
 
-### 2.2 Numerical verification of manuscript Table 8
+The retained 185-scenario archive consists of:
 
-The archived three-seed per-scenario records were regrouped for **TON_IoT, ALIE-20%, Dirichlet alpha = 0.5**. Recalculated arithmetic means agree with Table 8 to the displayed precision:
+| Evaluation group | Recorded scenarios |
+|---|---:|
+| Matched method comparisons | 108 |
+| Component ablations | 48 |
+| Attack/stress evaluations | 16 |
+| Time-separated reference evaluations | 9 |
+| Privacy evaluations | 4 |
+| **Total** | **185** |
 
-| Aggregation configuration | Mean F1 (%) | Mean client attack-detection AUC | Mean malicious aggregation weight (%) |
+A stored code-to-results audit found 185 expected scenario names, 185 run manifests, 185 final-result records, and 185 test-prediction CSVs. F1 and accuracy were recomputed from the archived predictions, with agreement reported for all 185 saved runs. This is an **archive-consistency audit**, not an independent GPU retraining or proof of identical execution-time source bytes.
+
+The consolidated 185-run archive is **not included in this GitHub repository**, and this README does not imply that all of its data and predictions are publicly deposited here.
+
+### 4.2 Mechanism-level experiment: 90 completed scenarios
+
+The additional mechanism study follows:
+
+| Item | Recorded value |
+|---|---|
+| Datasets | CICIoT2023; TON_IoT |
+| Aggregation configurations | Simple temporal trust; uncoupled RPP; partial event coupling; full event coupling; P4P |
+| Random seeds | 42; 2026; 31415 |
+| Conditions | Clean (Dirichlet α = 0.5); ALIE-20% (α = 0.5); ALIE-20% (α = 0.1) |
+| Per-scenario training budget | 25 communication rounds |
+| Completed scenarios | **2 × 5 × 3 × 3 = 90/90** |
+| Recorded execution start/resumption | 16 October 2026, 07:12:15 |
+| Recorded completion | 16 October 2026, 14:37:53 |
+| Execution-state status | `COMPLETED` |
+
+The timestamps in `execution_state.json` have **no explicit time-zone offset**. Independently, Google Drive metadata shows the saved results were created or modified on **16 October 2026** (metadata timestamps in UTC).
+
+**[Browse the archived mechanism-level experiment and its results on Google Drive](https://drive.google.com/drive/folders/1nzivI5IvjbgUTf5LhzTJgNxFkvj7XYur)**
+
+Access depends on Google Drive sharing permissions. The records are stored in Google Drive and are not committed to the GitHub repository.
+
+### 4.3 Evidence retained for the mechanism study
+
+The Google Drive archive includes the following key files:
+
+| Artifact | Purpose |
+|---|---|
+| `_STATE/execution_state.json` | Execution status, completed scenario identifiers, and recorded start/completion times |
+| `run_config.json` | Configuration, seeds, datasets, and execution-environment metadata |
+| `ALL_DATASETS_FINAL_RESULTS.csv` | Consolidated run-level results |
+| `R3_TABLES/MECHANISM_PER_SEED.csv` | Independent numerical record for each seed and condition |
+| `R3_TABLES/MECHANISM_MEAN_SD_CI95.csv` | Means, standard deviations, and reported confidence intervals |
+| `R3_TABLES/FULL_VS_ALTERNATIVES_PAIRED.csv` | Paired performance differences |
+| `R3_TABLES/PAIRED_DIFFERENCE_SUMMARY.csv` | Grouped paired-difference statistics |
+| `R3_TABLES/ROUND_LEVEL_SECURITY.csv` | Round-level security-related measures |
+| `<dataset>/<scenario>/final_result.json` | Individual experiment result and configuration fingerprint |
+| `<dataset>/<scenario>/COMPLETED.json` | Scenario completion marker |
+| `<dataset>/<scenario>/round_history.csv` | Training-round metrics and diagnostic history |
+| `<dataset>/<scenario>/best_checkpoint.pt` | Saved best model state |
+| `<dataset>/<scenario>/last_checkpoint.pt` | Saved last model state |
+
+The execution-state record lists 90 completed identifiers. The 90 per-seed result rows were checked for unique dataset/scenario identifiers and agreement with the aggregation summaries.
+
+### 4.4 Independent numerical check of manuscript Table 8
+
+For **TON_IoT**, **ALIE-20% poisoning**, and **Dirichlet α = 0.5**, recomputation from the archived records reproduces the manuscript's displayed three-seed means:
+
+| Aggregation configuration | F1 (%) | Client attack-detection AUC | Malicious aggregation weight (%) |
 |---|---:|---:|---:|
 | Simple robust + temporal trust | 99.195 | 0.258 | 25.161 |
 | Uncoupled RPP | 99.192 | 1.000 | 2.583 |
-| Partial event coupling | 99.184 | 1.000 | ~0 |
-| Full event coupling | 99.180 | 1.000 | ~0 |
+| Partial event coupling | 99.184 | 1.000 | approximately 0 |
+| Full event coupling | 99.180 | 1.000 | approximately 0 |
 | P4P (independent reimplementation) | 99.301 | 0.549 | 13.744 |
 
-For clarity, the full-coupling mean malicious-weight share is approximately **0.000046%**, not mathematically zero. `~0` represents rounding of the measured value. The study does **not** establish that full coupling always outperforms partial coupling or P4P in predictive F1; its observed influence-suppression effect is protocol- and dataset-dependent.
+The stored full-coupling malicious-weight mean is approximately **0.000046%**, rather than exactly zero. The evidence supports a **condition-specific reduction in malicious influence**, not general predictive superiority of the full configuration. In this comparison, P4P retained a higher F1-score.
 
-## 3. Historical V6 Reviewer-3 experiment versus the later V7 runner
+## 5. Reproducibility and source code
 
-Both efforts address the **same broad 90-scenario mechanism-comparison design**, but this common design does **not** imply identical source-code execution:
+### Repository files
 
-| Aspect | Completed historical V6 Reviewer-3 study | Later V7 aligned source runner |
-|---|---|---|
-| Purpose | Mechanism-level event-coupling comparison used for Table 8 | Source-aligned comparison built around the original published V6 aggregator |
-| Recorded aggregation | Dedicated `rpp_event` path for mechanism variants | `AlignedServer`; the `full` variant delegates to the original V6 `_aggregate_rpp` |
-| Saved study results | 90 completed scenarios in the linked Google Drive archive | **No separately verified V7 results asserted by this README** |
-| Output directory | `MyDrive/RPP_FL_RESULTS_V6_REVIEWER3` | `MyDrive/RPP_FL_RESULTS_V7_ALIGNED_COUPLING` when executed |
-| Source identity | Historical execution-time SHA-256 **not recorded** | Published GitHub revision can be identified through its commit history |
-
-The implementations are related, but **not byte-identical**. Among their code-path differences are median calculation conventions and handling of a zero/initial momentum reference. Consequently, **Table 8 is attributed to the actual completed V6 Reviewer-3 execution, not to an unverified execution of V7**. The original V6 All-Reviewer implementation and the separately executed V6 Reviewer-3 mechanism study should also not be conflated.
-
-### 3.1 GitHub publication timeline
-
-The aligned V7 source was introduced in [this GitHub commit](https://github.com/zaidjasim4/RPP/commit/84e70966b35b4d65517bdc4361700a8eee8c2577), dated **16 October 2026 at 19:19 UTC**. Google Drive metadata for the completed historical results predates that publication on the same date.
-
-The earlier wording **'the aligned experiment was not yet trained'** referred to the later V7 source-aligned runner at the time of repository preparation. It should **not** have been read as a statement that the historical Reviewer-3 experiments underlying Table 8 had never been executed. This distinction was inadequately explained in the original README and is corrected here.
-
-### 3.2 Source-provenance limitations
-
-- The historical configuration file records `code_sha256: null`; no execution-time source SHA-256 was saved. A retrospective byte-for-byte match between the exact running notebook and the public code **cannot be cryptographically established**.
-- The preserved execution notebook and outputs support identifying the study as **V6 Reviewer-3**, and saved metrics reproduce the published numerical summary. They do **not** prove numerical equivalence to V7 on real data.
-- The historical Python, PyTorch, NumPy, and pandas versions are captured in `run_config.json`, but the repository's `requirements.txt` is not an exact historical environment lockfile.
-- Original raw-data snapshot identities, complete published splits, and every historical dependency build are not fully established by this code repository alone.
-- Numerical consistency checks document result provenance; they are not a substitute for an independent full replication.
-
-## 4. Repository contents
-
-| File | Role |
+| File | Function |
 |---|---|
-| `RPP_FL_V6_ALL_REVIEWERS_ORIGINAL_AUDITED.py` | Original V6 All-Reviewer revision-suite implementation (not the executed Reviewer-3 source). |
-| `RPP_FL_V7_ALIGNED_COUPLING.py` | Later aligned five-variant / two-dataset / three-seed / three-condition runner. |
-| `RPP_FL_V7_ALIGNED_COUPLING_Colab.ipynb` | Self-contained, code-only Google Colab launcher for the aligned runner; saved training outputs are not included. |
-| `RPP_FL.py` | Earlier repository source file; do not treat its filename alone as provenance for Table 8. |
-| `requirements.txt` | Import/dependency requirements, not a historical environment lockfile. |
-| `.gitignore` | Excludes generated artifacts, datasets, and other local files. |
-| `README.md` | This project and provenance documentation. |
+| `RPP_FL_V6_ALL_REVIEWERS_ORIGINAL_AUDITED.py` | Main comprehensive experimental framework and revision-suite workflows |
+| `RPP_FL_V7_ALIGNED_COUPLING.py` | Mechanism-comparison runner with configured aggregation variants |
+| `RPP_FL_V7_ALIGNED_COUPLING_Colab.ipynb` | Google Colab launcher with embedded source for the aligned mechanism runner |
+| `RPP_FL.py` | Additional historical research source retained in the repository |
+| `requirements.txt` | Package requirements; not an exact historical environment lockfile |
+| `.gitignore` | Generated-file and local-file exclusions |
+| `README.md` | Project documentation and research-artifact guide |
 
-The historical **Reviewer-3 result archive is external**, and the executed Reviewer-3 notebook is not provided as a separately versioned, execution-hash-verified source artifact in this GitHub repository.
+### 5.1 Running the comprehensive experiment framework
 
-## 5. Running the published code
+Set up a compatible Python environment, obtain the datasets, configure their paths and Google Drive destinations, then run the comprehensive study:
 
-### 5.1 Original V6 All-Reviewer code
+```bash
+python -u RPP_FL_V6_ALL_REVIEWERS_ORIGINAL_AUDITED.py
+```
 
-Run `RPP_FL_V6_ALL_REVIEWERS_ORIGINAL_AUDITED.py` in a compatible Python/Google Colab environment with required dependencies and access to the configured datasets. This is the original All-Reviewer suite, **not** a command to recreate the historical Reviewer-3 outputs above.
+The script uses its configured datasets, experiment toggles, and checkpoint/output directories. The **185-scenario count describes the retained, audited research archive**, not a guarantee that every execution with a different configuration will produce the same scenario count or metrics.
 
-### 5.2 Later aligned V7 experiment (new execution)
+### 5.2 Running an aligned mechanism-comparison study
 
-Use `RPP_FL_V7_ALIGNED_COUPLING_Colab.ipynb` in Google Colab, or place the V7 and original V6 Python files in the same directory and execute:
+Open `RPP_FL_V7_ALIGNED_COUPLING_Colab.ipynb` in Google Colab; alternatively, place the mechanism runner and its required comprehensive framework source in the same directory and run:
 
 ```bash
 python -u RPP_FL_V7_ALIGNED_COUPLING.py
 ```
 
-The runner validates the expected SHA-256 of its V6 dependency before proceeding, executes its configured scenarios, and writes **new results** under `MyDrive/RPP_FL_RESULTS_V7_ALIGNED_COUPLING`. Its outputs must be identified as V7 results rather than silently substituted for the historical Reviewer-3 records. Relevant generated files include `ALIGNED_PROTOCOL_MANIFEST.json`, `MECHANISM_PER_SEED.csv`, `MECHANISM_MEAN_SD_CI95.csv`, and paired-comparison summaries.
+The supplied runner checks an expected SHA-256 for its source dependency and is configured for **90 experimental scenarios**. By default, newly generated outputs are directed to `MyDrive/RPP_FL_RESULTS_V7_ALIGNED_COUPLING`, including a protocol manifest and statistical summaries.
 
-**Important:** Real dataset access, preprocessing, resource requirements, and environment compatibility remain the responsibility of the reproducing researcher. Dataset download mechanisms may depend on external mirrors; check dataset versions, permissions, and licenses.
+**Numerical provenance note:** The values shown in Section 4.4 above are reproduced from the **archived completed mechanism-study records**, not claimed as results from a fresh execution of this published runner. The historical results were produced with a dedicated event-coupling implementation; the public aligned runner provides a related, source-aligned reproduction route. Because the historical run did not save an execution-time source SHA-256, byte-exact identity with the currently published sources cannot be established retrospectively. A new execution should be reported with its own manifest and outputs.
 
-## 6. Methodological and privacy qualifications
+## 6. Reproducibility limits and scientific interpretation
 
-- P4P and TrustFed-IDS-style references in the experiments are **independent reimplementations**, not original-author software releases.
-- The federated simulation does **not** implement or benchmark a cryptographic secure-aggregation protocol.
-- Client-level Gaussian differential privacy is evaluated in a **separate aggregate-release mode** with uniform aggregation, not as simultaneous confidential secure aggregation plus Byzantine client screening.
-- The mechanism-level study is not evidence of universal adversarial attribution, perfect poisoning defense, or zero-shot transfer across datasets.
-- The repository does not contain datasets, preprocessing caches, prediction files, full dataset snapshots, or execution logs; the **externally retained historical results** should be distinguished from the public code release.
+This project provides substantial saved experimental evidence, but the following qualifications matter:
 
-## 7. Referencing this research artifact
+- The **90-run archived execution is documented**, with matching per-seed statistics, scenario outputs, training histories, and checkpoints. The archived evidence verifies saved-result consistency; it does not constitute an independent replication by a third party.
+- The original 90-run `run_config.json` contains `"code_sha256": null`. Saved configuration fingerprints do **not** serve as cryptographic source-code checksums.
+- The 185-run audit supports **stored-artifact integrity** across the audited scenario records and prediction files, but does not establish a cryptographically proven identity of the exact originally executed source.
+- Full raw-data snapshot hashes, complete preprocessing provenance, and a historically exact environment lockfile are not available in this public code repository.
+- P4P and TrustFed-IDS-style comparators are **independent research reimplementations**, not official original-author releases.
+- Robust client screening uses individual-update information; no cryptographic secure-aggregation backend is implemented or benchmarked as operating simultaneously with that screening.
+- Differential privacy is assessed under a separately configured aggregate-release protocol.
+- High attack-detection AUC or low malicious weight in one tested setting must not be generalized into universal robustness claims.
 
-Please cite the manuscript for scientific claims. When discussing numerical results from **Section 5.6.1 / Table 8**, identify them as outputs from the **completed V6 Reviewer-3 mechanism-level study (16 October 2026)**. When discussing the code in `RPP_FL_V7_ALIGNED_COUPLING.py`, describe it as the **later source-aligned runner** and do not attribute the historical numerical results to a training execution of that file.
+The code and archived records are research artifacts. Their numerical evidence should be interpreted together with the specific datasets, attacks, partitions, random seeds, and validation protocols employed.
 
-No archival DOI, immutable release tag, or third-party replication certification is claimed here.
+## 7. Availability, manuscript use, and citation
 
-## 8. License and reuse
+- **Source code:** [github.com/zaidjasim4/RPP](https://github.com/zaidjasim4/RPP)
+- **Completed mechanism experiment (90 scenarios):** [Google Drive results archive](https://drive.google.com/drive/folders/1nzivI5IvjbgUTf5LhzTJgNxFkvj7XYur)
+- **Manuscript mapping:** Section 5.6.1 and Table 8 correspond to the completed, archived mechanism study.
+- **Comprehensive revision-suite results (185 scenarios):** Stored results have undergone an artifact-consistency audit, but this repository does not present them as a public, complete reproduction package.
 
-No explicit source-code license is currently included. Public visibility alone does not grant general permission to redistribute or reuse the code; contact the maintainers if permission is needed.
+No dataset redistribution permission, archive DOI, immutable release tag, or independent external replication certification is asserted here.
+
+## 8. License
+
+No explicit software license has been selected for this repository. Source visibility on GitHub does not automatically confer redistribution or modification rights; contact the maintainers regarding reuse.
+
+---
+
+**Documentation maintenance:** The README is intended to describe the RPP-FL research system, its supported experimental workflows, and the provenance of results. Scientific values should be cited from the underlying archived records, not inferred merely from the existence of code.
