@@ -68,7 +68,7 @@ The research contains a comprehensive evaluation program and a focused mechanism
 | Study component | Recorded scope | Evidence |
 |---|---|---|
 | Comprehensive reviewer-revision suite | **185 recorded scenarios** | Archived master result rows, scenario manifests, results, and prediction files were checked for internal consistency |
-| Mechanism-level aggregation study | **90/90 completed scenarios** | Linked Google Drive archive, per-seed outputs, execution state, training histories, and checkpoints |
+| Mechanism-level aggregation study | **90/90 completed scenarios** | Retained per-seed outputs, execution-state records, training histories, and checkpoints |
 
 ### 4.1 Comprehensive evaluation: 185 scenarios
 
@@ -103,15 +103,13 @@ The additional mechanism study follows:
 | Recorded completion | 16 October 2026, 14:37:53 |
 | Execution-state status | `COMPLETED` |
 
-The timestamps in `execution_state.json` have **no explicit time-zone offset**. Independently, Google Drive metadata shows the saved results were created or modified on **16 October 2026** (metadata timestamps in UTC).
+The timestamps in `execution_state.json` have **no explicit time-zone offset**. The archived file metadata records creation or modification of the results on **16 October 2026** (metadata timestamps in UTC).
 
-**[Browse the archived mechanism-level experiment and its results on Google Drive](https://drive.google.com/drive/folders/1nzivI5IvjbgUTf5LhzTJgNxFkvj7XYur)**
-
-Access depends on Google Drive sharing permissions. The records are stored in Google Drive and are not committed to the GitHub repository.
+The original experimental records are retained separately by the research team; they are **not** included in the public GitHub source-code repository.
 
 ### 4.3 Evidence retained for the mechanism study
 
-The Google Drive archive includes the following key files:
+The retained experiment archive includes the following key files:
 
 | Artifact | Purpose |
 |---|---|
@@ -161,7 +159,7 @@ The stored full-coupling malicious-weight mean is approximately **0.000046%**, r
 
 ### 5.1 Running the comprehensive experiment framework
 
-Set up a compatible Python environment, obtain the datasets, configure their paths and Google Drive destinations, then run the comprehensive study:
+Set up a compatible Python environment, obtain the datasets, and configure their paths and output destinations before running the comprehensive study:
 
 ```bash
 python -u RPP_FL_V6_ALL_REVIEWERS_ORIGINAL_AUDITED.py
@@ -199,7 +197,7 @@ The code and archived records are research artifacts. Their numerical evidence s
 ## 7. Availability, manuscript use, and citation
 
 - **Source code:** [github.com/zaidjasim4/RPP](https://github.com/zaidjasim4/RPP)
-- **Completed mechanism experiment (90 scenarios):** [Google Drive results archive](https://drive.google.com/drive/folders/1nzivI5IvjbgUTf5LhzTJgNxFkvj7XYur)
+- **Completed mechanism experiment (90 scenarios):** Archived execution-state records, per-seed result tables, training histories, and checkpoints are retained separately from the public source-code repository.
 - **Manuscript mapping:** Section 5.6.1 and Table 8 correspond to the completed, archived mechanism study.
 - **Comprehensive revision-suite results (185 scenarios):** Stored results have undergone an artifact-consistency audit, but this repository does not present them as a public, complete reproduction package.
 
