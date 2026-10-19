@@ -194,6 +194,25 @@ This project provides substantial saved experimental evidence, but the following
 
 The code and archived records are research artifacts. Their numerical evidence should be interpreted together with the specific datasets, attacks, partitions, random seeds, and validation protocols employed.
 
+### 6.1 Public verifiability and retained evidence — claim-by-claim disclosure
+
+**Public source-code inspection and independent numerical auditing are different levels of reproducibility.** This GitHub repository makes the research implementation and run instructions available, but it does not itself provide the complete artifacts required to independently reconstruct every manuscript table. The table below distinguishes what can be checked **from this public repository** from what has only been checked against **retained, separately held research artifacts**.
+
+| Research claim or audit task | What can presently be checked | Current limitation |
+|---|---|---|
+| Algorithm structure, model, aggregation rules, attack simulations, and experiment orchestration | **Publicly inspectable:** source files and execution guidance are available in this repository. | Source inspection alone does not verify the numerical results of a completed training run. |
+| Existence and internal consistency of the comprehensive 185-scenario archive | **Checked against retained records:** scenario counts, configuration fingerprints, individual outputs, and stored predictions; recomputed F1/accuracy were consistent for all 185 archived prediction sets. | The complete 185-run archive and its underlying predictions are **not publicly deposited here**, so this check cannot currently be independently repeated using GitHub alone. |
+| Three-seed values in manuscript Section 5.6.1 / Table 8 | **Checked against retained records:** 90 completed scenarios, per-seed result rows, three-seed means, execution state, round histories, and checkpoint files. | The numeric records are **not publicly deposited in this repository**; Table 8 is therefore not independently auditable from this public code release alone. |
+| Exact train/validation/test indices, client partitions, and feature selection | **Present in retained artifacts:** the comprehensive audit found 13 preprocessing manifests with corresponding split/mask records, and the focused-study cache audit verified six dataset/seed bundles with consistent saved indices and array hashes. | These split indices, masks, metadata, and prepared arrays are **not publicly available in this repository**. The indices refer to seed-specific sampled/deduplicated datasets. |
+| Exact raw dataset identity and preprocessing reconstruction | Dataset names, configurations, and data-loading procedures can be inspected in code. | Exact historical provider snapshots and raw-file cryptographic checksums are not established by this public release. Full fitted preprocessing parameters were not independently serialized for every archived study. |
+| Exact execution-time source revision | Published files and their present GitHub commit history can be inspected. | A source SHA-256 was **not captured during the historical runs**; saved scenario/configuration fingerprints do not cryptographically establish the exact executed code bytes. |
+| Claims on additional datasets | Dataset-processing support can be inspected in the source. | The audited 185-result collection contains evaluated runs for CICIoT2023, TON_IoT, and EdgeIIoTset; a WUSTL-IIoT preprocessing artifact alone does **not** independently verify manuscript-level WUSTL evaluation results. |
+| Independent end-to-end reproduction | The public software provides an execution starting point. | Reproduction still requires authorized dataset files, verified snapshot/version information, an adequately matched runtime environment, and a fresh experimental execution. |
+
+**Bottom line:** The stored experiment summaries have substantial *internal evidence of completion and numerical consistency*; this is **not equivalent to a publicly accessible, independently complete numerical-reproduction package**. Until the necessary artifacts are deposited through an appropriate accessible supplementary channel, claims of independent public auditability must remain limited to inspection of the published code and documentation.
+
+The research team can prepare an appropriately reviewed supplementary release covering non-sensitive manifests, run-level statistics, source-version documentation, and eligible reproducibility artifacts, subject to dataset redistribution rights and verification of provenance. **No supplementary release, public artifact DOI, or reviewer-accessible numerical archive is claimed to have been published by this README.**
+
 ## 7. Availability, manuscript use, and citation
 
 - **Source code:** [github.com/zaidjasim4/RPP](https://github.com/zaidjasim4/RPP)
